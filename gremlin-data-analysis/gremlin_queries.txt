@@ -1,0 +1,68 @@
+*EASY*
+
+1. query for getting count of comments (comment edges) per user (vertex):
+g.V().hasLabel('user').project('author', 'count').by('author').by(out('commented').count())
+g.V().hasLabel('user').map(outE('commented').count()).max() 					#16
+g.V().hasLabel('user').map(outE('commented').count()).min() 					#1
+g.V().hasLabel('user').map(outE('commented').count()).mean() 					#~1.3 per person
+
+
+
+2 & 3. the ratio 
+query for number of positive comments (sentiment score > 0.0):
+g.V().hasLabel('comment').has('sentiment_score', gt(0.0)).count() 	#4586
+
+query for number of negative comments (sentiment score < 0.0):
+g.V().hasLabel('comment').has('sentiment_score', lt(0.0)).count() 	#3207
+
+query for number of neutral comments (sentiment score = 0.0):
+g.V().hasLabel('comment').has('sentiment_score', eq(0.0)).count() 	#4856
+
+query for total number of comments
+g.V().hasLabel('comment').has('sentiment_score').count() 		#12649
+
+
+4. query for number of users per account age group (0-12 months, 12-24 months, 24-36, 36-48, 48-60):
+0-12 —> g.V().hasLabel('user').has('user_created_utc', gt(1509408000)).count()   					f	#0
+12-24 —> g.V().hasLabel('user').has('user_created_utc', gt(1477872000)).has('user_created_utc', lt(1509408000)).count()      	#0
+24-36 —> g.V().hasLabel('user').has('user_created_utc', gt(1446249600)).has('user_created_utc', lt(1477872000)).count()      	#0
+36-48 —> g.V().hasLabel('user').has('user_created_utc', gt(1414713600)).has('user_created_utc', lt(1446249600)).count()      	#1476
+48-60 —> g.V().hasLabel('user').has('user_created_utc', gt(1383177600)).has('user_created_utc', lt(1414713600)).count()      	#1916
+60+ --> g.V().hasLabel('user').has('user_created_utc', lt(1383177600)).count() 							#5496
+
+
+
+5. query for getting count of comments by subreddit:
+g.V().hasLabel('subreddit').project('name', 'count').by('subreddit').by(both('part_of').count()) #1355 (first); 1352 (second)
+
+
+
+
+*MEDIUM*
+
+6. average sentiment with user and age of account (remove limit for all)
+g.V(41435152).has('author').out('commented').values('sentiment_score').fold().as('a').V().hasLabel('user').as('b').where('b', gte('a')).by(out('commented').values('sentiment_score').mean()).by(unfold().mean()).limit(50).project('author', 'avg_score').by('author').by(out('commented').values('sentiment_score').mean())
+
+
+
+7.
+
+
+
+8.relationship of sentiment of comment to number of up/down votes
+g.V().has('sentiment_score', gt(0)).values('score').sum()   #123682
+g.V().has('sentiment_score', gt(0)).values('score').count() #4586
+
+g.V().has('sentiment_score', lt(0)).values('score').sum()   #79059
+g.V().has('sentiment_score', lt(0)).values('score').count() #3207
+
+
+
+*HARD*
+
+9. it isn't grouped by user's age and I can't get the created timestamps in order, but the data is there
+g.V().has('author').group().by('author').by(both('commented').values('sentiment_score', 'created_utc').fold())
+
+
+10.
+
